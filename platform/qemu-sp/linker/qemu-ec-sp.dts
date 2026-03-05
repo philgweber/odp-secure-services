@@ -40,8 +40,8 @@
 	execution-ctx-count = <1>;
 	exception-level = <2>; /* SEL1*/
 	execution-state = <0>; /* AArch64*/
-	load-address = <0x0 0x20400000>;
-	entrypoint-offset = <0x10000>;
+	load-address = <0x0 0x20800000>;
+	entrypoint-offset = <0x2000>;
 	image-size = <0x0 0x50000>;
 	xlat-granule = <0>; /* 4KiB */
 	boot-order = <2>;
@@ -61,7 +61,7 @@
 		// Heap used by RUST code in SP
 		heap {
 			description = "heap";
-			base-address = <0x0 0x20500000>;
+			base-address = <0x0 0x20900000>;
 			pages-count = <0x100>; /* 1MB of Heap space */
 			attributes = <0x3>;
 		};
