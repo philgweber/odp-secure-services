@@ -581,9 +581,9 @@ impl<S: TpmSstOps> TpmService<S> {
     /// # Safety
     /// Function initializes the internal CRB at all localities by calling
     /// init_internal_crb. This sets all locality regions to known valid
-    /// values. The internal TPM CRB address must be a valid memory region
-    /// passed in by the caller.
-    pub unsafe fn init(&mut self, tpm_internal_crb_address: u64) {
+    /// values. The internal and external TPM CRB addresses must be valid
+    /// memory regions passed in by the caller.
+    pub unsafe fn init(&mut self, tpm_internal_crb_address: u64, tpm_external_crb_address: u64) {
         // Build the default interface ID.
         self.interface_id_default = PtpCrbInterfaceIdentifier::new();
         self.interface_id_default
@@ -601,7 +601,7 @@ impl<S: TpmSstOps> TpmService<S> {
         }
 
         // Initialize the TPM Service State Translation Library.
-        self.sst.init(0x60120000);
+        self.sst.init(tpm_external_crb_address);
 
         self.current_state = TpmState::Idle;
         self.active_locality = NO_ACTIVE_LOCALITY;
@@ -715,6 +715,7 @@ mod tests {
     use odp_ffa::DirectMessagePayload;
 
     const TPM_SERVICE_UUID: Uuid = uuid!("17b862a4-1806-4faf-86b3-089a58353861");
+    const EXTERNAL_TPM_CRB_ADDR: u64 = 0x60120000;
 
     // =======================================================================
     // Mock CrbRegion
@@ -757,7 +758,7 @@ mod tests {
         fn is_idle_bypass_supported(&self) -> bool {
             false
         }
-        fn init(&mut self, _internal_tpm_address: u64) {
+        fn init(&mut self, _tpm_external_crb_address: u64) {
             // Do nothing
         }
     }
@@ -991,7 +992,7 @@ mod tests {
     fn test_start_locality_request() {
         let (buff, addr) = alloc_crb_region();
         let mut service = TpmService::new(MockTpmSst::new());
-        unsafe { service.init(addr) };
+        unsafe { service.init(addr, EXTERNAL_TPM_CRB_ADDR) };
         let crb: &mut PtpCrbRegisters = unsafe { &mut (*service.crb_ptr(0)) };
 
         let open_msg = direct_req2_msg(
@@ -1024,7 +1025,7 @@ mod tests {
     fn test_start_command() {
         let (buff, addr) = alloc_crb_region();
         let mut service = TpmService::new(MockTpmSst::new());
-        unsafe { service.init(addr) };
+        unsafe { service.init(addr, EXTERNAL_TPM_CRB_ADDR) };
         let crb: &mut PtpCrbRegisters = unsafe { &mut (*service.crb_ptr(0)) };
 
         let open_msg = direct_req2_msg(
@@ -1100,7 +1101,7 @@ mod tests {
     fn test_start_locality_relinquish() {
         let (buff, addr) = alloc_crb_region();
         let mut service = TpmService::new(MockTpmSst::new());
-        unsafe { service.init(addr) };
+        unsafe { service.init(addr, EXTERNAL_TPM_CRB_ADDR) };
         let crb: &mut PtpCrbRegisters = unsafe { &mut (*service.crb_ptr(0)) };
 
         let open_msg = direct_req2_msg(
